@@ -1,7 +1,6 @@
 import wx
-import constants
 import cv2
-import numpy as np
+import constants
 from FrameProcessor import processor
 from Config import Config
 
@@ -15,29 +14,31 @@ class AirMouse(wx.Frame):
         self.cam_list = cam_list
 
         self.capture = capture
-        ret, frame = self.capture.read()
 
-        self.frame_processor = processor()
-        [processed_frame, processed_mask] = self.frame_processor.process_frame(frame, self.config)
+        if self.capture:
+            ret, frame = self.capture.read()
 
-        processed_frame = cv2.resize(processed_frame, dsize=(640, 480), interpolation=cv2.INTER_CUBIC)
+            self.frame_processor = processor()
+            [processed_frame, processed_mask] = self.frame_processor.process_frame(frame, self.config)
 
-        processed_mask = cv2.resize(processed_mask, dsize=(640, 480), interpolation=cv2.INTER_CUBIC)
+            processed_frame = cv2.resize(processed_frame, dsize=(640, 480), interpolation=cv2.INTER_CUBIC)
 
-        height, width = processed_frame.shape[:2]
+            processed_mask = cv2.resize(processed_mask, dsize=(640, 480), interpolation=cv2.INTER_CUBIC)
 
-        processed_frame = cv2.cvtColor(processed_frame, cv2.COLOR_BGR2RGB)
-        self.bmp = wx.Bitmap.FromBuffer(width, height, processed_frame)
+            height, width = processed_frame.shape[:2]
 
-        processed_mask = cv2.cvtColor(processed_mask, cv2.COLOR_BGR2RGB)
-        self.mask = wx.Bitmap.FromBuffer(width, height, processed_mask)
+            processed_frame = cv2.cvtColor(processed_frame, cv2.COLOR_BGR2RGB)
+            self.bmp = wx.Bitmap.FromBuffer(width, height, processed_frame)
+
+            processed_mask = cv2.cvtColor(processed_mask, cv2.COLOR_BGR2RGB)
+            self.mask = wx.Bitmap.FromBuffer(width, height, processed_mask)
 
         self.InitUI()
 
     def InitUI(self):
          # create a panel in the frame
         panel = wx.Panel(self)
-        #panel.SetBackgroundColour('#311847')
+        panel.SetBackgroundColour('#FFFACD')
 
         font = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT)
 
@@ -178,21 +179,22 @@ class AirMouse(wx.Frame):
         self.Bind(wx.EVT_TIMER, self.NextFrame)
 
     def NextFrame(self, event):
-        ret, self.orig_frame = self.capture.read()
-        if ret:
-            [processed_frame, processed_mask] = self.frame_processor.process_frame(self.orig_frame, self.config)
+        if self.capture:
+            ret, self.orig_frame = self.capture.read()
+            if ret:
+                [processed_frame, processed_mask] = self.frame_processor.process_frame(self.orig_frame, self.config)
 
-            processed_frame = cv2.resize(processed_frame, dsize=(640, 480), interpolation=cv2.INTER_CUBIC)
+                processed_frame = cv2.resize(processed_frame, dsize=(640, 480), interpolation=cv2.INTER_CUBIC)
 
-            processed_mask = cv2.resize(processed_mask, dsize=(640, 480), interpolation=cv2.INTER_CUBIC)
+                processed_mask = cv2.resize(processed_mask, dsize=(640, 480), interpolation=cv2.INTER_CUBIC)
 
-            processed_frame = cv2.cvtColor(processed_frame, cv2.COLOR_BGR2RGB)
-            self.bmp.CopyFromBuffer(processed_frame)
-            self.cam.SetBitmap(self.bmp)
+                processed_frame = cv2.cvtColor(processed_frame, cv2.COLOR_BGR2RGB)
+                self.bmp.CopyFromBuffer(processed_frame)
+                self.cam.SetBitmap(self.bmp)
 
-            processed_mask = cv2.cvtColor(processed_mask, cv2.COLOR_BGR2RGB)
-            self.mask.CopyFromBuffer(processed_mask)
-            self.mask_bitmap.SetBitmap(self.mask)
+                processed_mask = cv2.cvtColor(processed_mask, cv2.COLOR_BGR2RGB)
+                self.mask.CopyFromBuffer(processed_mask)
+                self.mask_bitmap.SetBitmap(self.mask)
 
     def ToggleMouseTracking(self, e):
         self.config.enableMouseTracking = e.GetEventObject().GetValue()
@@ -258,31 +260,15 @@ class AirMouse(wx.Frame):
         self.config.uv = val
 
     def makeMenuBar(self):
-        """
-        A menu bar is composed of menus, which are composed of menu items.
-        This method builds a set of menus and binds handlers to be called
-        when the menu item is selected.
-        """
-
-        # Make a file menu with Hello and Exit items
         fileMenu = wx.Menu()
-        # The "\t..." syntax defines an accelerator key that also triggers
-        # the same event
-        helloItem = fileMenu.Append(-1, "&Hello...\tCtrl-H",
-                "Help string shown in status bar for this menu item")
-        fileMenu.AppendSeparator()
-        # When using a stock ID we don't need to specify the menu item's
-        # label
         exitItem = fileMenu.Append(wx.ID_EXIT)
 
         # Now a help menu for the about item
         helpMenu = wx.Menu()
         aboutItem = helpMenu.Append(wx.ID_ABOUT)
+        instructionsItem = helpMenu.Append(wx.ID_ANY, '&Instructions')
 
-        # Make the menu bar and add the two menus to it. The '&' defines
-        # that the next letter is the "mnemonic" for the menu item. On the
-        # platforms that support it those letters are underlined and can be
-        # triggered from the keyboard.
+        # Make the menu bar and add the two menus to it
         menuBar = wx.MenuBar()
         menuBar.Append(fileMenu, "&File")
         menuBar.Append(helpMenu, "&Help")
@@ -290,43 +276,41 @@ class AirMouse(wx.Frame):
         # Give the menu bar to the frame
         self.SetMenuBar(menuBar)
 
-        # Finally, associate a handler function with the EVT_MENU event for
-        # each of the menu items. That means that when that menu item is
-        # activated then the associated handler function will be called.
-        self.Bind(wx.EVT_MENU, self.OnHello, helloItem)
         self.Bind(wx.EVT_MENU, self.OnExit,  exitItem)
         self.Bind(wx.EVT_MENU, self.OnAbout, aboutItem)
+        self.Bind(wx.EVT_MENU, self.OnInstructions, instructionsItem)
 
 
     def OnExit(self, event):
         """Close the frame, terminating the application."""
         self.Close(True)
 
-
-    def OnHello(self, event):
-        """Say hello to the user."""
-        wx.MessageBox("Hello again from Air Mouse")
-
-
     def OnAbout(self, event):
         """Display an About Dialog"""
-        wx.MessageBox("This is a wxPython Hello World sample",
-                      "About Hello World 2",
+        wx.MessageBox(constants.aboutText,
+                      "About Air Mouse",
                       wx.OK|wx.ICON_INFORMATION)
+
+    def OnInstructions(self, event):
+        """Display an About Dialog"""
+        wx.MessageBox(constants.helpText,
+                        "Air Mouse Instructions",
+                        wx.OK|wx.ICON_INFORMATION)
 
 cam_id = 0
 cam_list = []
+# Get a list of working cameras connected to the device
 for i in range(5):
     capture = cv2.VideoCapture(cam_id)
     if (capture and capture.isOpened()):
         cam_list.append(cam_id)
     cam_id += 1
 
-capture = cv2.VideoCapture(cam_list[0])
+# Select the first working camera by default
+if len(cam_list) > 0: capture = cv2.VideoCapture(cam_list[0])
+else: capture = None
 
 app = wx.App()
 frm = AirMouse(cam_list, capture, None, title='Air Mouse')
 frm.Show()
 app.MainLoop()
-
-

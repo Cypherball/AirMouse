@@ -6,10 +6,12 @@ kernelDilation = np.ones((5,5),np.uint8)
 kernelOpen = np.ones((5,5))
 kernelClose = np.ones((9,9))
 
+
 def preprocess_image(img):
     processed = cv.GaussianBlur(img, (9,9), 0)
     processed = cv.medianBlur(processed, 5)
     return processed
+
 
 def process_mask(mask):
     '''
@@ -21,9 +23,11 @@ def process_mask(mask):
     mask_close = cv.morphologyEx(mask_open, cv.MORPH_CLOSE, kernelClose)
     return mask_close
 
+
 def nothing(x=None):
     # Literally does nothing
     pass
+
 
 def bounding_areas_from_contours(contours):
     '''
@@ -37,17 +41,20 @@ def bounding_areas_from_contours(contours):
         bounding_areas[area] = [x,y,w,h,area]
     return bounding_areas
 
+
 def sort_dict_by_keys(data, reverse=False):
     '''
     Sort a dictionary by key
     '''
     return dict(sorted(data.items(), key=lambda item: item[0], reverse=reverse))
 
+
 def linear_interpolate(num, old_range, new_range):
     '''
     Perform linear interpolation for a number in a given range to a different range
     '''
     return ((new_range[1] - new_range[0]) * (num - old_range[0])/(old_range[1] - old_range[0])) + new_range[0]
+
 
 def remove_image_background(img, bg_ref):
     diff1 = cv.subtract(img, bg_ref)
@@ -58,11 +65,10 @@ def remove_image_background(img, bg_ref):
     gray[np.abs(gray) < 10] = 0
     fgmask = gray.astype(np.uint8)
     fgmask[fgmask>0]=255
-    #invert the mask
-    #fgmask_inv = cv.bitwise_not(fgmask)
     #use the masks to extract the FG
     fgimg = cv.bitwise_and(img, img, mask = fgmask)
     return fgimg
+
 
 def get_bitmap_from_array(width=32, height=32, colour = (0,0,0) ):
    array = np.zeros( (height, width, 3),'uint8')

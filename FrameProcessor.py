@@ -6,7 +6,6 @@ import utilities
 class processor():
 
     def __init__(self):
-        #self.frame = frame
         pyautogui.FAILSAFE = False
         self.screenWidth, self.screenHeight = pyautogui.size()
 
@@ -19,7 +18,6 @@ class processor():
         self.prevCursorLoc = ()
         self.mouseDown = False
 
-        #self.frameCount = 0
         self.captureBGFlag = False
         self.remove_bg = False
         self.bg_ref = None
