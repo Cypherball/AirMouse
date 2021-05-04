@@ -1,5 +1,6 @@
 import numpy as np
 import cv2 as cv
+import wx
 
 kernelDilation = np.ones((5,5),np.uint8)
 kernelOpen = np.ones((5,5))
@@ -62,3 +63,11 @@ def remove_image_background(img, bg_ref):
     #use the masks to extract the FG
     fgimg = cv.bitwise_and(img, img, mask = fgmask)
     return fgimg
+
+def get_bitmap_from_array(width=32, height=32, colour = (0,0,0) ):
+   array = np.zeros( (height, width, 3),'uint8')
+   array[:,:,] = colour
+   image = wx.EmptyImage(width,height)
+   image.SetData( array.tostring())
+   wxBitmap = image.ConvertToBitmap()  # OR:  wx.BitmapFromImage(image)
+   return wxBitmap
