@@ -35,8 +35,8 @@ class Config():
             self.uv = 255
         elif color == 'blue':
             self.lh = 90
-            self.ls = 100
-            self.lv = 100
+            self.ls = 45
+            self.lv = 80
 
             self.uh = 128
             self.us = 255

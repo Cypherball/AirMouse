@@ -127,14 +127,25 @@ class processor():
 
                 # Free Tracking (Indpendent of tracked object on the camera)
                 elif config.selectedTrackingType == 1 and self.prevCursorLoc:
-                    cursor_deviation_x = cursorLoc[0] - self.prevCursorLoc[0]
-                    cursor_deviation_y = cursorLoc[1] - self.prevCursorLoc[1]
+                    cursor_deviation_x = (cursorLoc[0] - self.prevCursorLoc[0])  * config.sensitivity/100
+                    cursor_deviation_y = (cursorLoc[1] - self.prevCursorLoc[1]) * config.sensitivity/100
 
                     # Ignore micromovements
-                    if abs(cursor_deviation_x) < 3: cursor_deviation_x = 0
-                    if abs(cursor_deviation_y) < 3: cursor_deviation_y = 0
+                    if abs(cursor_deviation_x) < 4: cursor_deviation_x = 0
+                    if abs(cursor_deviation_y) < 4: cursor_deviation_y = 0
 
-                    pyautogui.moveTo((currentMouseX + cursor_deviation_x) * config.sensitivity/100, (currentMouseY + cursor_deviation_y) * config.sensitivity/100)
+                    newMouseX = currentMouseX + cursor_deviation_x
+                    newMouseY = currentMouseY + cursor_deviation_y
+
+                    # Ignore offscreen movements
+                    if newMouseX < 0: newMouseX = 0
+                    elif newMouseX > self.screenWidth: newMouseX = self.screenWidth
+                    
+                    if newMouseY < 0: newMouseY = 0
+                    elif newMouseY > self.screenHeight: newMouseY = self.screenHeight
+
+                    if newMouseX != currentMouseX or newMouseY != currentMouseY:
+                        pyautogui.moveTo(newMouseX, newMouseY)
                  
             elif len(points) == 0 and self.mouseDown:
                 pyautogui.mouseUp()
@@ -142,5 +153,7 @@ class processor():
 
         if cursorLoc:
             self.prevCursorLoc = cursorLoc
+        else:
+            self.prevCursorLoc = ()
         
         return [frame, maskFinal]
